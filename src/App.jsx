@@ -22,7 +22,6 @@ function App() {
   }
 
   const onBtSendMessage = () => {
-    let nsp = nsp === "/" ? "default" : "/channel"
     socket.emit("chat message", {
       name: user,
       message: message
@@ -39,7 +38,7 @@ function App() {
       socket.close()
     }
   }, [])
-
+  
   const renderUser = () => {
     return user.map((item, index) => {
       return(
