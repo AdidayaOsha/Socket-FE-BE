@@ -7,14 +7,26 @@ const url = "http://localhost:8000"
 
 function App() {
 
-  const [messages, setMessages] = useState("")
-  const [user, setUser] = useState("")
+  const [messages, setMessages] = useState([])
+  const [receiveMessages, setReceiveMessage] = useState(false)
+  const [user, setUser] = useState([])
   const [message, setMessage] = useState("")
+  const [nsp, setNsp] = useState("")
   const socket = io(url)
   
-  const joinChat = () => {
+  const joinChat = (nsp) => { // channel
+    const socket = io(url + nsp) // url + channel
+    setNsp({nsp: nsp}) // channel
     socket.emit('JoinChat', {name: user})
     // socket.on('chat message', msgs => setMessages(msgs))
+  }
+
+  const onBtSendMessage = () => {
+    let nsp = nsp === "/" ? "default" : "/channel"
+    socket.emit("chat message", {
+      name: user,
+      message: message
+    })
   }
 
   useEffect(() => {
@@ -27,7 +39,33 @@ function App() {
       socket.close()
     }
   }, [])
+
+  const renderUser = () => {
+    return user.map((item, index) => {
+      return(
+        <li>
+          {item.name}
+        </li>
+      )
+    })
+  }
   
+  const renderMessages = () => {
+    return messages.map((item, index) => {
+      return(
+        <Col style={{margin: "10px 5px", display: "flex"}} key={index}>
+          <Toast>
+            <ToastHeader icon="primary" style={{fontStyle: "italic"}}>
+              {item.name}
+            </ToastHeader>
+            <ToastBody>
+              {item.message}
+            </ToastBody>
+          </Toast>
+        </Col>
+      )
+    })
+  }
 
   return (
     <Container style={{width: "50%", height: "45em", background: "white"}}>
@@ -35,19 +73,20 @@ function App() {
       {/* // ! HEADERS */}
       <Container style={{background: "lightblue", height: "8%"}}>
         <Row>
-          <Col style={{display: "flex", marginTop: "10px"}}>
+          <Col style={{display: "flex", marginTop: "10px"}} className= "col-4">
             <h4>Boiler Template</h4>
           </Col>
           <Col style={{display: "flex", flexDirection: "row", justifyContent: "end", marginTop: "10px"}}>
             <Input name="name" onChange={e => setUser(e.target.value)} placeholder="Enter Name..." style={{display: "flex", fontStyle:"italic", fontSize: "0.8em"}} />
-            <Button onClick={() => joinChat()} style={{margin: "0 10px", padding: "0 20px", fontStyle: "italic"}}>Join</Button>
+            <Button onClick={() => joinChat('/')} style={{margin: "0 10px", padding: "0 20px", fontStyle: "italic"}}>Join NSP1</Button>
+            <Button onClick={() => joinChat('/channel')} style={{margin: "0 10px", padding: "0 20px", fontStyle: "italic"}}>Join NSP2</Button>
             <Button style={{fontStyle:"italic"}}>Leave</Button>
           </Col>
         </Row>
       </Container>
 
       {/* //! ROOM SERVER, AND CHAT */}
-      <Container style={{background: "pink", height: "85%"}}>
+      <Container style={{background: "white", height: "85%", border: "1px solid lightblue"}}>
         <Row style={{height: "100%"}}>
           <Col style={{background: "", display: "flex", flexDirection: "column"}} className= "col-3">
             <h5 style={{fontStyle: "italic"}}>Room Name</h5>
@@ -58,29 +97,17 @@ function App() {
             <div style={{background: ""}}>
               List of Users:
               <ul>
-                <li>User1</li>
-                <li>User2</li>
-                <li>User3</li>
-                <li>User4</li>
+                {renderUser}
               </ul>
             </div>
           </Col>
 
           <Col style={{background: "white", border: "1px solid lightblue"}} className= "col-9">
           {/* //! OUR CHAT */}
-            <Col style={{margin: "10px 5px", display: "flex"}}>
-              <Toast>
-                <ToastHeader icon="primary" style={{fontStyle: "italic"}}>
-                  Osha Prima Adidaya
-                </ToastHeader>
-                <ToastBody>
-                  Yo, ini gw nyoba fitur chat nih, kayaknya
-                </ToastBody>
-              </Toast>
-            </Col>
+            {renderMessages()}
 
           {/* //! FRIENDS CHAT */}
-            <Col style={{margin: "10px 5px", display: "flex", justifyContent: "end"}}>
+            {/* <Col style={{margin: "10px 5px", display: "flex", justifyContent: "end"}}>
               <Toast>
                 <ToastHeader icon="success" style={{fontStyle: "italic"}}>
                   Alduri Asfirna
@@ -89,7 +116,7 @@ function App() {
                   Yo, ini gw nyoba fitur chat nih, kayaknya. Tapi ini asik sih ga kayak biasanya.
                 </ToastBody>
               </Toast>
-            </Col>
+            </Col> */}
             
           </Col>
         </Row>
@@ -100,7 +127,7 @@ function App() {
         <Row style={{height: "100%", margin: "0 -24px"}}>
           <InputGroup>
             <Input value={message} onChange={e => setMessage(e.target.value)} placeholder="Insert a message..."/>
-            <Button onClick={() => socket.emit("chat message", message)}>
+            <Button onClick={onBtSendMessage}>
               Send
             </Button>
           </InputGroup>
