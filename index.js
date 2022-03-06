@@ -47,7 +47,7 @@ io.on('connection', socket => {
         io.emit('send message', arrMsg)
     })
     socket.on('disconnect', () => {
-        console.log('User Disconnect');
+        console.log('User Disconnect');git 
     })
 })
 
