@@ -22,14 +22,14 @@ app.arrMsg = arrMsg
 app.post('/sendMessage', (req, res) => {
     if (req.query.namespace === "default") {
         arrMsg.push(req.body)
+        io.emit('chat message', arrMsg)
+        res.status(200).send(arrMsg)
 
     } else if (req.query.namespace === "channel") {
         arrChn.push(req.body)
         channelNsp.emit('chat message', arrChn)
-        res.status(200).send(arrMsg)
+        res.status(200).send(arrChn)
     }
-    io.emit('chat message', arrMsg)
-    res.status(200).send(arrMsg)
 })
 
 // kalau on: nerima data
@@ -47,7 +47,7 @@ io.on('connection', socket => {
         io.emit('send message', arrMsg)
     })
     socket.on('disconnect', () => {
-        console.log('User Disconnect');git 
+        console.log('User Disconnect')
     })
 })
 
