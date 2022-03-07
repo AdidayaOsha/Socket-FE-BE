@@ -14,16 +14,25 @@ app.use(express.json())
 //Set the Configuration first
 const io = new Server(server, {cors: {origin: "http://localhost:3000"}, allowEIO3: true})
 let arrMsg = []
-let arrChn = []
+let arrChn = [] 
+let arrRoom = []
+let usersRoom1 = []
 app.io = io
 app.arrMsg = arrMsg
 
 // event send message
 app.post('/sendMessage', (req, res) => {
     if (req.query.namespace === "default") {
-        arrMsg.push(req.body)
-        io.emit('chat message', arrMsg)
-        res.status(200).send(arrMsg)
+        if(req.body.room) {
+            // to deliver message to a room
+            arrRoom.push(req.body)
+            io.in(req.body.room).emit("messagesRoom", arrRoom)
+        } else {
+            // to deliver a message to global channel
+            arrRoom.push(req.body)
+            io.emit('chat message', arrMsg)
+        }
+        res.status(200).send('Send messages success')
 
     } else if (req.query.namespace === "channel") {
         arrChn.push(req.body)
@@ -34,23 +43,25 @@ app.post('/sendMessage', (req, res) => {
 
 // kalau on: nerima data
 // kalau emit: ngirim data
+
+// NAMESPACE DEFAULT
 io.on('connection', socket => {
-    console.log("User");
     socket.on('JoinChat', data => {
         console.log("User join NSP1 :", data);
     })
 
     // terima data chat
-    socket.on("chat message", (data) => {
-        console.log(data);
-        arrMsg.push(data)
-        io.emit('send message', arrMsg)
+    socket.on("JoinRoom", data => {
+        socket.join(data.room)        
+        usersRoom1.push({...data, id: socket.id})
+        io.in(data.room).emit('notifRoom1', `${data.name} has entered the chat`)
     })
     socket.on('disconnect', () => {
         console.log('User Disconnect')
     })
 })
 
+// NAMESPACE CHANNEL
 const channelNsp = io.of('/channel')
 channelNsp.on('connection', socket => {
     socket.on('JoinChat', data => {
