@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from "react";
 import {Container, Row, Col, Button} from 'react-bootstrap'
 import {Toast, ToastHeader, ToastBody, Input, InputGroup} from 'reactstrap'
+import Axios from 'axios'
 import {io} from 'socket.io-client'
 import 'bootstrap/dist/css/bootstrap.min.css';
 const url = "http://localhost:8000"
@@ -16,15 +17,24 @@ function App() {
   
   const joinChat = (nsp) => { // channel
     const socket = io(url + nsp) // url + channel
-    setNsp({nsp: nsp}) // channel
+    setNsp(nsp) // channel
     socket.emit('JoinChat', {name: user})
+    socket.on('chat message', msgs => {
+      console.log("receive socket:", msgs);
+      setMessages(msgs)
+    })
     // socket.on('chat message', msgs => setMessages(msgs))
   }
 
   const onBtSendMessage = () => {
-    socket.emit("chat message", {
+    let namespace = nsp === '/' ? "default" : "channel"
+    Axios.post(url + `/sendMessage?namespace=${namespace}`, {
       name: user,
-      message: message
+      message
+    }).then(res => {
+      console.log(res.data);
+    }).catch((err) => {
+      console.log(err + "there's an error occurs");
     })
   }
 
