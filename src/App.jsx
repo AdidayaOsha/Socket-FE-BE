@@ -27,17 +27,20 @@ function App() {
     // socket.on('chat message', msgs => setMessages(msgs))
   }
 
-  const onBtSendMessage = (room) => {
-    let namespace = nsp === '/' ? "default" : "channel"
-    console.log(namespace);
-    Axios.post(url + `/sendMessage?namespace=${namespace}`, {
+  const onBtSendMessage = (room = '/') => {
+    let that = {
       room,
       name: user,
       message
-    }).then(res => {
+    }
+    let namespace = nsp === '/' ? "default" : "channel"
+    console.log(namespace);
+    Axios.post(url + `/sendMessage?namespace=${namespace}`, that
+    ).then(res => {
       console.log(res.data);
       setMessage("")
     }).catch((err) => {
+      console.log(err);
     })
   }
 
@@ -179,7 +182,7 @@ function App() {
         <Row style={{height: "100%", margin: "0 -24px"}}>
           <InputGroup>
             <Input value={message} onChange={e => setMessage(e.target.value)} placeholder="Insert a message..."/>
-            <Button onClick={onBtSendMessage}>
+            <Button onClick={() => onBtSendMessage()}>
               Send
             </Button>
           </InputGroup>
@@ -227,7 +230,7 @@ function App() {
 
         <Col style={{background: "white", border: "1px solid lightblue", overflowBlock: "scroll"}} className= "col-9">
         {/* //! OUR CHAT */}
-        <h3>{notifRoom}</h3>
+        <h6>{notifRoom}</h6>
         {roomMessage.length === 0 ? <h6 style={{
           fontStyle: "italic", 
           textAlign: "center", 
